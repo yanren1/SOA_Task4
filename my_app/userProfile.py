@@ -122,7 +122,7 @@ def changeMyProfile():
         session['user'] = usersData[data.get("username")]
 
     if data.get("password"):
-        usersData[session['user'].get("username")] = {"username": data.get("username"),
+        usersData[session['user'].get("username")] = {"username": session['user'].get("username"),
                                            "PW": data.get("password"),
                                            "Role": session['user'].get('Role')}
 
