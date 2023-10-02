@@ -56,7 +56,7 @@ def register():
     if username in usersData:
         return jsonify({"error": "Username already exists"}), 400
 
-    usersData[username] = {"username": username, "PW": password, "Role": "User"},
+    usersData[username] = {"username": username, "PW": password, "Role": "User"}
     return jsonify({"message": "Registered successfully"})
 
 
@@ -123,7 +123,7 @@ def changeMyProfile():
 
     if data.get("password"):
         usersData[session['user'].get("username")] = {"username": data.get("username"),
-                                           "PW": session['user'].get('PW'),
+                                           "PW": data.get("password"),
                                            "Role": session['user'].get('Role')}
 
         session['user'] = usersData[session['user'].get("username")]
