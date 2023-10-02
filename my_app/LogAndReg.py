@@ -1,11 +1,10 @@
-from flask import abort,jsonify,session
+from flask import jsonify,session,request
 from flask_httpauth import HTTPBasicAuth
 from my_app import usersData,app
 import secrets
 import string
 
 auth = HTTPBasicAuth()
-app.secret_key = 'your_secret_key'
 
 def generate_random_key(length):
     characters = string.ascii_letters + string.digits
@@ -45,6 +44,21 @@ def logout():
         return jsonify({"message": "Logged out"})
     else:
         return jsonify({"message": "You have not logged in"})
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+    if not username or not password:
+        return jsonify({"error": "Username and password are required"}), 400
+
+    if username in usersData:
+        return jsonify({"error": "Username already exists"}), 400
+
+    usersData[username] = {"username": username, "PW": password, "Role": "User"},
+    return jsonify({"message": "Registered successfully"})
+
 
 def admin_required(func):
     def wrapper(*args, **kwargs):
