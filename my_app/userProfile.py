@@ -91,6 +91,20 @@ def checkMyProfile():
 def checkAllProfile():
     return jsonify({'All Profiles': usersData})
 
+@app.route('/changeRole', methods=['PUT'],endpoint='changeRole')
+@admin_required
+def changeRole():
+    data = request.get_json()
+    if data.get("username") and data.get("username") in usersData:
+        if data.get("username") == session['user'].get('username'):
+            return jsonify({'Warning': "Can't change your own role!"})
+        if data.get("Role") and data.get("Role") in ["Admin", "User"]:
+            usersData[data.get("username")]["Role"] = data.get("Role")
+            return jsonify({'Message': f"User {data.get('username')} Role changed to {data.get('Role')}"})
+        else:
+            return jsonify({'Warning': "No valid role found!"})
+    else:
+        return jsonify({'Warning': "No valid username found!"})
 
 @app.route('/changeMyProfile', methods=['PUT'],endpoint='changeMyProfile')
 @login_required
