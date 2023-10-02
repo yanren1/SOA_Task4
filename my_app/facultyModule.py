@@ -1,6 +1,6 @@
 from flask import jsonify, abort, url_for
 from my_app import app, facultyData
-from my_app.LogAndReg import auth,admin_required,login_required
+from my_app.userProfile import auth,admin_required,login_required
 
 
 # Get a list of all faculties

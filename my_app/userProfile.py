@@ -78,3 +78,41 @@ def login_required(func):
         else:
             return jsonify({"error": "Error Code: 401. Unauthorized access. login required."}), 401
     return wrapper
+
+
+@app.route('/checkMyProfile', methods=['GET'],endpoint='checkMyProfile')
+@login_required
+def checkMyProfile():
+    username = session['user'].get('username')
+    return jsonify({'MyProfile': usersData[username]})
+
+@app.route('/checkAllProfile', methods=['GET'],endpoint='checkAllProfile')
+@admin_required
+def checkAllProfile():
+    return jsonify({'All Profiles': usersData})
+
+
+@app.route('/changeMyProfile', methods=['PUT'],endpoint='changeMyProfile')
+@login_required
+def changeMyProfile():
+    data = request.get_json()
+    username = session['user'].get('username')
+
+    if data.get("username"):
+        if data.get("username") in usersData:
+            return jsonify({"error": "Username already exists"}), 400
+        usersData[data.get("username")] = {"username": data.get("username"),
+                                           "PW": session['user'].get('PW'),
+                                           "Role": session['user'].get('Role')}
+        usersData.pop(username)
+        session['user'] = usersData[data.get("username")]
+
+    if data.get("password"):
+        usersData[session['user'].get("username")] = {"username": data.get("username"),
+                                           "PW": session['user'].get('PW'),
+                                           "Role": session['user'].get('Role')}
+
+        session['user'] = usersData[session['user'].get("username")]
+
+    return jsonify({"message": "Your profile is updated."})
+

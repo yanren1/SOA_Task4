@@ -1,9 +1,9 @@
 from flask import request, jsonify, abort, url_for
 from my_app import app, studentData, coursesData, facultyData
-from my_app.LogAndReg import admin_required,login_required
+from my_app.userProfile import admin_required,login_required
 
 # Get a list of all students with optional filtering
-@app.route('/students', methods=['GET'])
+@app.route('/students', methods=['GET'],endpoint='get_students')
 @admin_required
 def get_students():
     filtered_students = {}
