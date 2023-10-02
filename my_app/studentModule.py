@@ -1,9 +1,10 @@
 from flask import request, jsonify, abort, url_for
 from my_app import app, studentData, coursesData, facultyData
-from my_app.userProfile import admin_required,login_required
+from my_app.userProfile import admin_required,auth
 
 # Get a list of all students with optional filtering
 @app.route('/students', methods=['GET'],endpoint='get_students')
+@auth.login_required
 @admin_required
 def get_students():
     filtered_students = {}
@@ -24,6 +25,7 @@ def get_students():
 
 # Get details of a specific student
 @app.route('/students/<int:student_id>', methods=['GET'],endpoint='get_student')
+@auth.login_required
 @admin_required
 def get_student(student_id):
     if student_id not in studentData:
@@ -34,6 +36,7 @@ def get_student(student_id):
 
 
 @app.route('/students/<int:student_id>/faculty', methods=['GET'],endpoint='get_students_faculty')
+@auth.login_required
 @admin_required
 def get_students_faculty(student_id):
     # requires_role('Admin')
@@ -48,6 +51,7 @@ def get_students_faculty(student_id):
 
 # Get details of a student's registered course
 @app.route('/students/<int:student_id>/courses', methods=['GET'],endpoint='get_students_courses')
+@auth.login_required
 @admin_required
 def get_students_courses(student_id):
     # requires_role('Admin')
@@ -59,6 +63,7 @@ def get_students_courses(student_id):
 
 # Add a new student
 @app.route('/students', methods=['POST'],endpoint='add_student')
+@auth.login_required
 @admin_required
 def add_student():
     checkList0 = ['Name', 'Faculty', ]
@@ -82,6 +87,7 @@ def add_student():
 
 # Update a student's information
 @app.route('/students/<int:student_id>', methods=['PUT'],endpoint='update_student')
+@auth.login_required
 @admin_required
 def update_student(student_id):
     if student_id not in studentData:
@@ -108,6 +114,7 @@ def update_student(student_id):
 
 # Delete a student
 @app.route('/students/<int:student_id>', methods=['DELETE'],endpoint='delete_student')
+@auth.login_required
 @admin_required
 def delete_student(student_id):
     if student_id not in studentData:

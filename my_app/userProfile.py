@@ -1,17 +1,8 @@
-from flask import jsonify,session,request
+from flask import jsonify,request
 from flask_httpauth import HTTPBasicAuth
 from my_app import usersData,app
-import secrets
-import string
 
 auth = HTTPBasicAuth()
-
-def generate_random_key(length):
-    characters = string.ascii_letters + string.digits
-    random_key = ''.join(secrets.choice(characters) for _ in range(length))
-    return random_key
-
-app.secret_key = generate_random_key(64)
 
 @auth.error_handler
 def unauthorized():
@@ -23,27 +14,11 @@ def unauthorized():
 @auth.verify_password
 def verify_password(username, password):
     if username in usersData and usersData[username]["PW"] == password:
-        session['user'] = usersData[username]
         return True  # Authentication successful
     else:
         auth.username = username  # Store the username for use in the error handler
-        if 'user' in session:
-            session.pop('user')
-        # print("verify_password",auth.current_user())
+
         return False  # Authentication failed
-
-@app.route('/login', methods=['POST'],)
-@auth.login_required
-def login():
-    return jsonify({"message": "Logged in successfully"})
-
-@app.route('/logout', methods=['POST'],)
-def logout():
-    if 'user' in session:
-        session.pop('user')
-        return jsonify({"message": "Logged out"})
-    else:
-        return jsonify({"message": "You have not logged in"})
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -62,41 +37,34 @@ def register():
 
 def admin_required(func):
     def wrapper(*args, **kwargs):
-        if 'user' in session :
-            if session['user'].get('Role') == 'Admin':
-                return func(*args, **kwargs)
-            else:
-                return jsonify({"error": "Error Code: 403. Unauthorized access. Admin role required."}), 403
-        else:
-            return jsonify({"error": "Error Code: 401. Unauthorized access. login required."}), 401
-    return wrapper
-
-def login_required(func):
-    def wrapper(*args, **kwargs):
-        if 'user' in session :
+        username = auth.current_user()
+        # print(username)
+        if usersData[username]['Role'] == 'Admin':
             return func(*args, **kwargs)
         else:
-            return jsonify({"error": "Error Code: 401. Unauthorized access. login required."}), 401
+            return jsonify({"error": "Error Code: 403. Unauthorized access. Admin role required."}), 403
+
     return wrapper
 
-
 @app.route('/checkMyProfile', methods=['GET'],endpoint='checkMyProfile')
-@login_required
+@auth.login_required
 def checkMyProfile():
-    username = session['user'].get('username')
+    username = auth.current_user()
     return jsonify({'MyProfile': usersData[username]})
 
 @app.route('/checkAllProfile', methods=['GET'],endpoint='checkAllProfile')
+@auth.login_required
 @admin_required
 def checkAllProfile():
     return jsonify({'All Profiles': usersData})
 
 @app.route('/changeRole', methods=['PUT'],endpoint='changeRole')
+@auth.login_required
 @admin_required
 def changeRole():
     data = request.get_json()
     if data.get("username") and data.get("username") in usersData:
-        if data.get("username") == session['user'].get('username'):
+        if data.get("username") == auth.current_user():
             return jsonify({'Warning': "Can't change your own role!"})
         if data.get("Role") and data.get("Role") in ["Admin", "User"]:
             usersData[data.get("username")]["Role"] = data.get("Role")
@@ -107,26 +75,25 @@ def changeRole():
         return jsonify({'Warning': "No valid username found!"})
 
 @app.route('/changeMyProfile', methods=['PUT'],endpoint='changeMyProfile')
-@login_required
+@auth.login_required
 def changeMyProfile():
     data = request.get_json()
-    username = session['user'].get('username')
+    username = auth.current_user()
 
     if data.get("username"):
         if data.get("username") in usersData:
             return jsonify({"error": "Username already exists"}), 400
         usersData[data.get("username")] = {"username": data.get("username"),
-                                           "PW": session['user'].get('PW'),
-                                           "Role": session['user'].get('Role')}
+                                           "PW": usersData[username]['PW'],
+                                           "Role": usersData[username]['Role']}
         usersData.pop(username)
-        session['user'] = usersData[data.get("username")]
+        username = data.get("username")
 
     if data.get("password"):
-        usersData[session['user'].get("username")] = {"username": session['user'].get("username"),
+        usersData[username] = {"username": username,
                                            "PW": data.get("password"),
-                                           "Role": session['user'].get('Role')}
+                                           "Role": usersData[username]['Role']}
 
-        session['user'] = usersData[session['user'].get("username")]
 
     return jsonify({"message": "Your profile is updated."})
 
